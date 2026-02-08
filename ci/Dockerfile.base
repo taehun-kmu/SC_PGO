@@ -1,0 +1,49 @@
+FROM ros:humble-ros-base AS base
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Pre-configure tzdata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    curl \
+    gnupg \
+    lsb-release \
+    software-properties-common \
+    sudo \
+    git \
+    ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base
+
+# Install dependencies
+# Security fix: Removed curl-to-bash apt-fast installation, using standard apt instead
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-colcon-common-extensions \
+    libpcl-dev \
+    libpcap-dev \
+    libopencv-dev \
+    libceres-dev \
+    libomp-dev \
+    libeigen3-dev \
+    ros-humble-cv-bridge \
+    ros-humble-pcl-conversions \
+    ros-humble-pcl-msgs \
+    ros-humble-tf2 \
+    ros-humble-tf2-ros \
+    ros-humble-nav-msgs \
+    ros-humble-sensor-msgs \
+    ros-humble-geometry-msgs \
+    ros-humble-std-msgs \
+    ros-humble-image-transport \
+    ros-humble-gtsam \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ros2_ws
+
+# Verify tools
+RUN /bin/bash -c "source /opt/ros/humble/setup.bash && echo \$ROS_DISTRO && colcon version-check && ninja --version"
