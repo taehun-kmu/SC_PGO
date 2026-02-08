@@ -982,9 +982,10 @@ int main(int argc, char ** argv)
       std::filesystem::remove_all(pgScansDirectory);
     }
     std::filesystem::create_directories(pgScansDirectory);
-  } catch (const std::filesystem::filesystem_error& e) {
-    RCLCPP_ERROR(nh->get_logger(), "Failed to setup directory %s: %s",
-                 pgScansDirectory.c_str(), e.what());
+  } catch (const std::filesystem::filesystem_error & e) {
+    RCLCPP_ERROR(
+      nh->get_logger(), "Failed to setup directory %s: %s",
+      pgScansDirectory.c_str(), e.what());
     throw;
   }
 
@@ -1071,12 +1072,24 @@ int main(int argc, char ** argv)
   RCLCPP_INFO(nh->get_logger(), "Shutting down threads...");
   shutdown_requested = true;
 
-  if (posegraph_slam.joinable()) posegraph_slam.join();
-  if (lc_detection.joinable()) lc_detection.join();
-  if (icp_calculation.joinable()) icp_calculation.join();
-  if (isam_update.joinable()) isam_update.join();
-  if (viz_map.joinable()) viz_map.join();
-  if (viz_path.joinable()) viz_path.join();
+  if (posegraph_slam.joinable()) {
+    posegraph_slam.join();
+  }
+  if (lc_detection.joinable()) {
+    lc_detection.join();
+  }
+  if (icp_calculation.joinable()) {
+    icp_calculation.join();
+  }
+  if (isam_update.joinable()) {
+    isam_update.join();
+  }
+  if (viz_map.joinable()) {
+    viz_map.join();
+  }
+  if (viz_path.joinable()) {
+    viz_path.join();
+  }
 
   RCLCPP_INFO(nh->get_logger(), "All threads terminated. Exiting.");
   return 0;

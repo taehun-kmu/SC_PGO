@@ -40,18 +40,34 @@ add_executable(alaserPGO
   src/laserPosegraphOptimization.cpp
   include/scancontext/Scancontext.cpp
 )
+
+# Use ament_target_dependencies for ROS2 packages (handles includes, links, and definitions)
 ament_target_dependencies(alaserPGO
-  rclcpp sensor_msgs geometry_msgs nav_msgs std_msgs tf2 tf2_ros cv_bridge pcl_conversions pcl_msgs
+  cv_bridge
+  geometry_msgs
+  nav_msgs
+  pcl_conversions
+  pcl_msgs
+  rclcpp
+  sensor_msgs
+  std_msgs
+  tf2
+  tf2_ros
 )
+
+# Link non-ROS2 libraries using plain signature
+# NOTE: Plain signature (no PRIVATE/PUBLIC keywords) is required here because
+# ament_target_dependencies uses plain signature internally, and CMake prohibits
+# mixing plain and keyword signatures on the same target. This is a necessary
+# ROS2 ecosystem compatibility pattern, not a violation of modern CMake practices.
 target_compile_options(alaserPGO
   PRIVATE ${OpenMP_CXX_FLAGS}
 )
 target_link_libraries(alaserPGO
-  PRIVATE
-    ${PCL_LIBRARIES}
-    ${CERES_LIBRARIES}
-    OpenMP::OpenMP_CXX  # Fix: Use imported target instead of compile flags
-    gtsam
+  ${PCL_LIBRARIES}
+  ${CERES_LIBRARIES}
+  OpenMP::OpenMP_CXX
+  gtsam
 )
 
 install(TARGETS

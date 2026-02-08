@@ -1,7 +1,41 @@
 # Copyright 2024 SC_PGO_ROS2 Contributors
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Utility for merging multiple PCD (Point Cloud Data) files into a single map."""
+"""Utility for merging multiple PCD (Point Cloud Data) files into a single map.
+
+This script merges a sequence of PCD scan files into a single global map using
+optimized poses from pose graph optimization. It transforms each scan from local
+coordinates to global coordinates using the corresponding pose, applies optional
+near-point removal to filter out robot platform artifacts, and combines all scans
+into a single intensity-encoded point cloud.
+
+The output is a compressed PCD file containing XYZI (position + intensity) data
+that can be used for visualization or further processing.
+
+Configuration:
+    Modify the user configuration block (lines 27-48) to set:
+    - data_dir: Path to directory containing Scans/ folder and optimized_poses.txt
+    - scan_idx_range_to_stack: Range of scan indices to merge [start, end]
+    - node_skip: Process every Nth scan (1 = all scans)
+    - num_points_in_a_scan: Expected points per scan for memory pre-allocation
+    - is_live_vis: Enable live visualization during processing (slower)
+    - is_o3d_vis: Display final merged map in Open3D viewer
+    - intensity_color_max: Maximum intensity value for color mapping
+    - is_near_removal: Remove points within thres_near_removal meters
+
+Dependencies:
+    - pypcd: Install via pip install git+https://github.com/DanielPollithy/pypcd.git
+    - open3d: pip install open3d
+    - numpy: pip install numpy
+
+Input Files:
+    - {data_dir}/Scans/*.pcd: Individual scan files (numbered sequentially)
+    - {data_dir}/optimized_poses.txt: Optimized poses as 3x4 transformation matrices
+    - jet_table.npy, bone_table.npy: Color lookup tables for intensity visualization
+
+Output:
+    - {data_dir}/map_{start}_to_{end}_with_intensity.pcd: Merged map with intensity
+"""
 
 import copy
 import os

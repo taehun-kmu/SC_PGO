@@ -12,6 +12,15 @@ from launch.conditions import IfCondition
 
 
 def generate_launch_description():
+    """Generate launch description for SC-PGO node.
+
+    Creates launch configuration with the following components:
+    - alaserPGO node: Main pose graph optimization node
+    - RViz2 node: Optional visualization (controlled by rvizscpgo argument)
+
+    Returns:
+        LaunchDescription: Complete launch description with all nodes and arguments.
+    """
     # Launch arguments
     rvizscpgo_arg = DeclareLaunchArgument(
         "rvizscpgo", default_value="true", description="Launch RViz for SC-PGO"
