@@ -10,10 +10,22 @@ from pypcd import pypcd
 
 
 def make_xyzi_point_cloud(xyzl, label_type='f'):
-    """
-    Make XYZL point cloud from numpy array.
+    """Create a point cloud with XYZI (position + intensity) fields from a numpy array.
 
-    TODO i labels?
+    Converts a numpy array containing 3D positions and intensity values into a
+    pypcd PointCloud object suitable for writing to PCD files. The intensity
+    field can be encoded as either float (F) or unsigned int (U) type.
+
+    Args:
+        xyzl: Numpy array of shape (N, 4) where columns are [x, y, z, intensity].
+        label_type: Type encoding for intensity field. Either 'f' for float32 or
+            'u' for uint8. Defaults to 'f'.
+
+    Returns:
+        pypcd.PointCloud: Point cloud object with x, y, z, and intensity fields.
+
+    Raises:
+        ValueError: If label_type is not 'f' or 'u'.
     """
     md = {'version': .7,
           'fields': ['x', 'y', 'z', 'intensity'],
