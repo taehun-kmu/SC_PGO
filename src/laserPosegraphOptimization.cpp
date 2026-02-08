@@ -1,12 +1,15 @@
 // Copyright 2024 SC_PGO_ROS2 Contributors
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include <math.h>
+#include <cmath>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <queue>
@@ -104,7 +107,7 @@ int recentIdxUpdated = 0;
 gtsam::NonlinearFactorGraph gtSAMgraph;
 bool gtSAMgraphMade = false;
 gtsam::Values initialEstimate;
-gtsam::ISAM2 * isam;
+std::unique_ptr<gtsam::ISAM2> isam;  // Fix: Use smart pointer instead of raw pointer
 gtsam::Values isamCurrentEstimate;
 
 noiseModel::Diagonal::shared_ptr priorNoise;
@@ -153,6 +156,9 @@ std::string odomKITTIformat;
 std::fstream pgTimeSaveStream;
 
 std::shared_ptr<rclcpp::Node> nh;
+
+// Fix: Shutdown flag for graceful thread termination
+std::atomic<bool> shutdown_requested{false};
 
 std::string padZeros(int val, int num_digits = 6)
 {
@@ -218,25 +224,22 @@ void saveOptimizedVerticesKITTIformat(
 void laserOdometryHandler(
   const nav_msgs::msg::Odometry::SharedPtr _laserOdometry)
 {
-  mBuf.lock();
+  std::lock_guard<std::mutex> lock(mBuf);  // Fix: RAII lock guard
   odometryBuf.push(_laserOdometry);
-  mBuf.unlock();
 }  // laserOdometryHandler
 
 void laserCloudFullResHandler(
   sensor_msgs::msg::PointCloud2::SharedPtr _laserCloudFullRes)
 {
-  mBuf.lock();
+  std::lock_guard<std::mutex> lock(mBuf);  // Fix: RAII lock guard
   fullResBuf.push(_laserCloudFullRes);
-  mBuf.unlock();
 }  // laserCloudFullResHandler
 
 void gpsHandler(const sensor_msgs::msg::NavSatFix::SharedPtr _gps)
 {
   if (useGPS) {
-    mBuf.lock();
+    std::lock_guard<std::mutex> lock(mBuf);  // Fix: RAII lock guard
     gpsBuf.push(_gps);
-    mBuf.unlock();
   }
 }  // gpsHandler
 
@@ -603,7 +606,7 @@ void removeNaNAndInfiniteInPlace(typename pcl::PointCloud<PointT>::Ptr & cloud)
 
 void process_pg()
 {
-  while (1) {
+  while (!shutdown_requested && rclcpp::ok()) {  // Fix: Check shutdown flag
     while (!odometryBuf.empty() && !fullResBuf.empty()) {
       //
       // pop and check keyframe is or not
@@ -832,7 +835,7 @@ void process_lcd()
 
 void process_icp(void)
 {
-  while (1) {
+  while (!shutdown_requested && rclcpp::ok()) {  // Fix: Check shutdown flag
     while (!scLoopICPBuf.empty()) {
       if (scLoopICPBuf.size() > 30) {
         RCLCPP_WARN(
@@ -967,8 +970,18 @@ int main(int argc, char ** argv)
     std::fstream(save_directory + "times.txt", std::fstream::out);
   pgTimeSaveStream.precision(std::numeric_limits<double>::max_digits10);
   pgScansDirectory = save_directory + "Scans/";
-  auto unused = system((std::string("exec rm -r ") + pgScansDirectory).c_str());
-  unused = system((std::string("mkdir -p ") + pgScansDirectory).c_str());
+
+  // Fix: Replace system() calls with std::filesystem (prevents shell injection)
+  try {
+    if (std::filesystem::exists(pgScansDirectory)) {
+      std::filesystem::remove_all(pgScansDirectory);
+    }
+    std::filesystem::create_directories(pgScansDirectory);
+  } catch (const std::filesystem::filesystem_error& e) {
+    RCLCPP_ERROR(nh->get_logger(), "Failed to setup directory %s: %s",
+                 pgScansDirectory.c_str(), e.what());
+    throw;
+  }
 
   keyframeRadGap = deg2rad(keyframeDegGap);
 
@@ -984,7 +997,7 @@ int main(int argc, char ** argv)
   ISAM2Params parameters;
   parameters.relinearizeThreshold = 0.01;
   parameters.relinearizeSkip = 1;
-  isam = new ISAM2(parameters);
+  isam = std::make_unique<ISAM2>(parameters);  // Fix: Use make_unique instead of raw new
   initNoises();
 
   scManager.setSCdistThres(scDistThres);
@@ -1048,5 +1061,18 @@ int main(int argc, char ** argv)
     process_viz_path};    // visualization - path (high frequency)
 
   rclcpp::spin(nh);
+
+  // Fix: Graceful shutdown - signal threads and wait for completion
+  RCLCPP_INFO(nh->get_logger(), "Shutting down threads...");
+  shutdown_requested = true;
+
+  if (posegraph_slam.joinable()) posegraph_slam.join();
+  if (lc_detection.joinable()) lc_detection.join();
+  if (icp_calculation.joinable()) icp_calculation.join();
+  if (isam_update.joinable()) isam_update.join();
+  if (viz_map.joinable()) viz_map.join();
+  if (viz_path.joinable()) viz_path.join();
+
+  RCLCPP_INFO(nh->get_logger(), "All threads terminated. Exiting.");
   return 0;
 }
