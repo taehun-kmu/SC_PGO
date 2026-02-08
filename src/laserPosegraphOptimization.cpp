@@ -8,12 +8,15 @@
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <queue>
 #include <rclcpp/rclcpp.hpp>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -24,8 +27,8 @@
 #include <pcl/common/transforms.h>
 // #include <pcl/filters/extract_indices.h>
 #include <pcl/registration/icp.h>
-// #include <pcl/io/pcd_io.h>
-// #include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>  // Fix: Required for savePCDFileBinary
+#include <pcl/filters/filter.h>  // Fix: Required for removeNaNFromPointCloud
 #include <pcl/filters/voxel_grid.h>
 // #include <pcl/octree/octree_pointcloud_voxelcentroid.h>
 // #include <pcl/filters/crop_box.h>
@@ -425,7 +428,8 @@ void updatePoses(void)
   recentOptimizedX = lastOptimizedPose.translation().x();
   recentOptimizedY = lastOptimizedPose.translation().y();
 
-  recentIdxUpdated = int(keyframePosesUpdated.size()) - 1;
+  // Fix: Set to size() instead of size()-1 so loops with < recentIdxUpdated include all keyframes
+  recentIdxUpdated = int(keyframePosesUpdated.size());
 
   mtxRecentPose.unlock();
 }  // updatePoses
@@ -488,9 +492,10 @@ void loopFindNearKeyframesCloud(
     if (keyNear < 0 || keyNear >= int(keyframeLaserClouds.size())) {continue;}
 
     mKF.lock();
+    // Fix: Use pose corresponding to each keyNear, not root_idx
     *nearKeyframes += *local2global(
       keyframeLaserClouds[keyNear],
-      keyframePosesUpdated[root_idx]);
+      keyframePosesUpdated[keyNear]);
     mKF.unlock();
   }
 

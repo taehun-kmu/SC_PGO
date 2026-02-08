@@ -4,6 +4,8 @@
 // Author:   Tong Qin               qintonguav@gmail.com
 //               Shaozu Cao                 saozu.cao@connect.ust.hk
 
+#pragma once  // Fix: Add include guard to prevent multiple inclusion
+
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 #include <eigen3/Eigen/Dense>

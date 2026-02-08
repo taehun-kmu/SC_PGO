@@ -31,21 +31,16 @@ float deg2rad(float degrees)
 
 float xy2theta(const float & _x, const float & _y)
 {
-  if ( (_x >= 0) & (_y >= 0)) {
-    return (180 / M_PI) * atan(_y / _x);
+  // Fix: Use std::atan2 to safely handle all quadrants and zero values
+  const float angle_rad = std::atan2(_y, _x);
+  float angle_deg = rad2deg(angle_rad);
+
+  // Normalize to [0, 360)
+  if (angle_deg < 0.0f) {
+    angle_deg += 360.0f;
   }
 
-  if ( (_x < 0) & (_y >= 0)) {
-    return 180 - ( (180 / M_PI) * atan(_y / (-_x)) );
-  }
-
-  if ( (_x < 0) & (_y < 0)) {
-    return 180 + ( (180 / M_PI) * atan(_y / _x) );
-  }
-
-  if ( (_x >= 0) & (_y < 0)) {
-    return 360 - ( (180 / M_PI) * atan((-_y) / _x) );
-  }
+  return angle_deg;
 } // xy2theta
 
 
@@ -85,7 +80,8 @@ double SCManager::distDirectSC(MatrixXd & _sc1, MatrixXd & _sc2)
     VectorXd col_sc1 = _sc1.col(col_idx);
     VectorXd col_sc2 = _sc2.col(col_idx);
 
-    if ( (col_sc1.norm() == 0) | (col_sc2.norm() == 0) ) {
+    // Fix: Use logical OR instead of bitwise
+    if ( (col_sc1.norm() == 0) || (col_sc2.norm() == 0) ) {
       continue;       // don't count this sector pair.
 
     }
@@ -93,6 +89,11 @@ double SCManager::distDirectSC(MatrixXd & _sc1, MatrixXd & _sc2)
 
     sum_sector_similarity = sum_sector_similarity + sector_similarity;
     num_eff_cols = num_eff_cols + 1;
+  }
+
+  // Fix: Guard against division by zero
+  if (num_eff_cols == 0) {
+    return 1.0;  // No effective columns to compare; treat as maximum distance
   }
 
   double sc_sim = sum_sector_similarity / num_eff_cols;

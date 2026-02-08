@@ -47,9 +47,11 @@ target_compile_options(alaserPGO
   PRIVATE ${OpenMP_CXX_FLAGS}
 )
 target_link_libraries(alaserPGO
-  ${PCL_LIBRARIES} ${CERES_LIBRARIES}
-  ${OpenMP_CXX_FLAGS}
-  gtsam
+  PRIVATE
+    ${PCL_LIBRARIES}
+    ${CERES_LIBRARIES}
+    OpenMP::OpenMP_CXX  # Fix: Use imported target instead of compile flags
+    gtsam
 )
 
 install(TARGETS
