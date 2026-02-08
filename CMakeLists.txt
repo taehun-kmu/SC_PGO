@@ -43,19 +43,23 @@ add_executable(alaserPGO
 
 # Use ament_target_dependencies for ROS2 packages (handles includes, links, and definitions)
 ament_target_dependencies(alaserPGO
-  rclcpp
-  sensor_msgs
+  cv_bridge
   geometry_msgs
   nav_msgs
+  pcl_conversions
+  pcl_msgs
+  rclcpp
+  sensor_msgs
   std_msgs
   tf2
   tf2_ros
-  cv_bridge
-  pcl_conversions
-  pcl_msgs
 )
 
-# Link non-ROS2 libraries using plain signature (to match ament_target_dependencies)
+# Link non-ROS2 libraries using plain signature
+# NOTE: Plain signature (no PRIVATE/PUBLIC keywords) is required here because
+# ament_target_dependencies uses plain signature internally, and CMake prohibits
+# mixing plain and keyword signatures on the same target. This is a necessary
+# ROS2 ecosystem compatibility pattern, not a violation of modern CMake practices.
 target_compile_options(alaserPGO
   PRIVATE ${OpenMP_CXX_FLAGS}
 )
