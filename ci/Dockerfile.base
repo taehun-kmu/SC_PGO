@@ -43,6 +43,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-gtsam \
     && rm -rf /var/lib/apt/lists/*
 
+# Build and install catch_ros2 for testing infrastructure
+# Install to /opt/catch_ros2_ws as an overlay workspace
+RUN mkdir -p /opt/catch_ros2_ws/src && \
+    cd /opt/catch_ros2_ws/src && \
+    git clone https://github.com/ngmor/catch_ros2.git && \
+    cd /opt/catch_ros2_ws && \
+    /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --cmake-args -DBUILD_TESTING=OFF"
+
+# Source catch_ros2 overlay in ROS setup
+RUN echo "source /opt/catch_ros2_ws/install/setup.bash" >> /opt/ros/humble/setup.bash
+
 WORKDIR /ros2_ws
 
 # Verify tools

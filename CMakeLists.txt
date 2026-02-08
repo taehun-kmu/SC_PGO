@@ -86,13 +86,27 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # List of linters to skip (copyright and cpplint have too many false positives on third-party code)
+  # List of linters to skip
+  # copyright and cpplint: Too many false positives on third-party code
+  # pep257: Project uses Google/Sphinx-style docstrings; ament_pep257 enforces NumPy-style
   list(APPEND AMENT_LINT_AUTO_EXCLUDE
     ament_cmake_copyright
     ament_cmake_cpplint
     ament_cmake_pep257
   )
   ament_lint_auto_find_test_dependencies()
+
+  # Test infrastructure
+  find_package(catch_ros2 REQUIRED)
+
+  # Define test types for this project
+  set(TEST_TYPES unit integration)
+
+  # Test utility functions
+  include(test/cmake/test_functions.cmake)
+
+  # Process test directories
+  add_subdirectory(test)
 endif()
 
 ament_package()
