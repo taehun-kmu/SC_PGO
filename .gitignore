@@ -1,0 +1,135 @@
+# OS-specific files
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+
+# IDE and editor files
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Vim
+*.swp
+*.swo
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+
+# C++ build artifacts
+
+# Compiled binaries
+*.o
+*.so
+*.dylib
+*.exe
+*.out
+*.app
+*.a
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+
+# ROS 2 specific
+
+# Colcon build directories
+build/
+install/
+log/
+
+# ROS bag files (large datasets)
+*.bag
+*.db3
+
+# ROS logs
+*.log
+
+
+# Point cloud and map data
+
+# Point cloud files
+*.pcd
+*.ply
+
+# Generated maps
+*_merged.pcd
+merged_map/
+
+
+# Python artifacts
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+
+# Environment and secrets
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Credentials
+*.pem
+*.key
+credentials.json
+secrets.yaml
+
+
+# Project-specific
+
+# Generated config files
+*.autosave
+
+# Debug outputs
+debug/
+core
+core.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# System
+CLAUDE.md
+context/
+analysis/
+design/
+setup/
+
+# MCP
+.serena

@@ -1,0 +1,9 @@
+build/
+install/
+log/
+.git/
+.vscode/
+.cache/
+ci/
+*.o
+*.a
